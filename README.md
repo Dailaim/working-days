@@ -50,8 +50,6 @@ curl "https://working-days-beta.vercel.app/workdays?date=2025-01-15T14:30:00.000
 ```json
 {
   "date": "2025-01-22T14:30:00.000Z",
-  "businessDaysAdded": 5,
-  "businessHoursAdded": 0
 }
 ```
 
