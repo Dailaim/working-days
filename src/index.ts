@@ -1,7 +1,6 @@
 import { Elysia } from "elysia";
+import { initializeHolidays } from "./holidays-service";
 
-const app = new Elysia().get("/", () => "Hello Elysia").listen(3000);
+await initializeHolidays();
 
-console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-);
+export const api = new Elysia();
