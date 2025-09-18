@@ -35,14 +35,14 @@ describe("API /workdays", () => {
 		expect(body.date).toBe("2025-08-19T14:00:00.000Z");
 	});
 
-	it("debe sumar 1 día y 3 horas → jueves 9:00 a.m.", async () => {
+	it("debe sumar 1 día y 4 horas → jueves 9:00 a.m.", async () => {
 		const testDate = "2025-08-19T20:00:00.000Z";
-		const url = `${BASE_URL}?days=1&hours=3&date=${encodeURIComponent(testDate)}`;
+		const url = `${BASE_URL}?days=1&hours=4&date=${encodeURIComponent(testDate)}`;
 		const res = await api.handle(new Request(url));
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(body.date).toMatch(/Z$/);
-		expect(body.date).toBe("2025-08-21T14:00:00.000Z");
+		expect(body.date).toBe("2025-08-21T15:00:00.000Z");
 	});
 
 	it("debe sumar 1 día desde domingo → lunes 5:00 p.m.", async () => {
