@@ -8,7 +8,7 @@ Una API para calcular días y horas laborales, considerando festivos colombianos
 
 - ✅ Cálculo de días y horas laborales
 - ✅ Soporte para festivos colombianos
-- ✅ Horario laboral configurable (5:00 AM - 5:00 PM)
+- ✅ Horario laboral configurable (8:00 AM - 5:00 PM)
 - ✅ Zona horaria de Colombia (COT)
 - ✅ API REST con documentación OpenAPI
 - ✅ Tests automatizados
@@ -111,7 +111,7 @@ Los tests están ubicados en la carpeta `tests/` y utilizan Bun como test runner
 
 ### Horas laborales
 
-- **Horario:** 8:00 AM - 7:00 PM (COT)
+- **Horario:** 8:00 AM - 5:00 PM (COT)
 - **Zona horaria:** Colombia (UTC-5)
 - **Comportamiento:** Si se añaden horas fuera del horario laboral, se ajustan al siguiente día laboral
 
