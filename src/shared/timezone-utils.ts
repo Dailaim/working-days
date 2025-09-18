@@ -1,16 +1,13 @@
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { COLOMBIA_TIMEZONE } from "./types";
 
-
 export function utcToColombiaTime(date: Date): Date {
 	return toZonedTime(date, COLOMBIA_TIMEZONE);
 }
 
-
 export function colombiaTimeToUtc(date: Date): Date {
 	return fromZonedTime(date, COLOMBIA_TIMEZONE);
 }
-
 
 export function getCurrentColombiaTime(): Date {
 	const now = new Date();

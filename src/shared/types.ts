@@ -56,3 +56,10 @@ export const WORKING_DAYS = [
 	WeekDay.THURSDAY,
 	WeekDay.FRIDAY,
 ];
+
+// Parámetros validados de entrada
+export interface ValidatedParams {
+	days: number;
+	hours: number;
+	startDate: Date;
+}

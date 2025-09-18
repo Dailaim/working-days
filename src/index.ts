@@ -1,120 +1,105 @@
+import openapi from "@elysiajs/openapi";
 import { Elysia, t } from "elysia";
-import { initializeHolidays } from "./holidays-service";
-import {
-	colombiaTimeToUtc,
-	formatToUtcIsoString,
-	getCurrentColombiaTime,
-	isValidIsoDate,
-	parseUtcToColombiaTime,
-} from "./timezone-utils";
-import { WorkingDaysCalculator } from "./working-days";
+import { initializeHolidays } from "./holidays";
+import { WorkingDaysErrors } from "./working-days/errors";
+import { handleWorkdaysRequest } from "./working-days/handlers";
 
 // Inicializar días festivos al arrancar la aplicación
 await initializeHolidays();
 
-export const api = new Elysia().get(
-	"/workdays",
-	({ query, status }) => {
-		try {
-			const { days, hours, date } = query;
-
-			if (!days && !hours) {
-				return status(400, {
-					error: "InvalidParameters",
-					message: "At least one of 'days' or 'hours' parameters is required",
-				});
-			}
-
-			let daysToAdd = 0;
-			if (days) {
-				const parsedDays = parseInt(days, 10);
-				if (Number.isNaN(parsedDays) || parsedDays < 0) {
-					return status(400, {
-						error: "InvalidParameters",
-						message: "Parameter 'days' must be a positive integer",
-					});
-				}
-				daysToAdd = parsedDays;
-			}
-
-			let hoursToAdd = 0;
-			if (hours) {
-				const parsedHours = parseInt(hours, 10);
-				if (Number.isNaN(parsedHours) || parsedHours < 0) {
-					return status(400, {
-						error: "InvalidParameters",
-						message: "Parameter 'hours' must be a positive integer",
-					});
-				}
-				hoursToAdd = parsedHours;
-			}
-
-			let startDate: Date;
-			if (date) {
-				if (!isValidIsoDate(date)) {
-					return status(400, {
-						error: "InvalidParameters",
-						message:
-							"Parameter 'date' must be a valid ISO 8601 date with Z suffix",
-					});
-				}
-				startDate = parseUtcToColombiaTime(date);
-			} else {
-				startDate = getCurrentColombiaTime();
-			}
-
-			const calculator = new WorkingDaysCalculator(startDate);
-
-			let resultDate: Date;
-
-			if (daysToAdd > 0 && hoursToAdd > 0) {
-				resultDate = calculator.addWorkingDaysAndHours(daysToAdd, hoursToAdd);
-			} else if (daysToAdd > 0) {
-				resultDate = calculator.addWorkingDays(daysToAdd);
-			} else {
-				resultDate = calculator.addWorkingHours(hoursToAdd);
-			}
-
-			const utcResult = colombiaTimeToUtc(resultDate);
-
+export const api = new Elysia()
+	.use(openapi())
+	.onError(({ error, set }) => {
+		if (WorkingDaysErrors.isWorkingDaysError(error)) {
+			set.status = error.status;
 			return {
-				date: formatToUtcIsoString(utcResult),
+				error: error.name,
+				message: error.message,
 			};
-		} catch (error) {
-			console.error("Error processing request:", error);
-			return status(500, {
-				error: "InternalServerError",
-				message: "An internal server error occurred",
-			});
 		}
-	},
-	{
-		response: {
-			200: t.Object({
-				date: t.String(),
-			}),
-			400: t.Object({
-				error: t.String(),
-				message: t.String(),
-			}),
-			422: t.Object({
-				error: t.String(),
-				message: t.String(),
-			}),
-			500: t.Object({
-				error: t.String(),
-				message: t.String(),
-			}),
-		},
+	})
+	.get(
+		"/workdays",
+		({ query }) => {
+			const result = handleWorkdaysRequest(query);
 
-		query: t.Partial(
-			t.Object({
-				days: t.String(),
-				hours: t.String(),
-				date: t.String(),
-			}),
-		),
-	},
-);
+			// Si el resultado tiene una propiedad 'error', es un ErrorResponse
+			if ("error" in result) {
+				throw new WorkingDaysErrors.validationError(result.message);
+			}
+
+			return result;
+		},
+		{
+			detail: {
+				summary: "Calculate working days and hours",
+				description:
+					"Calculates the resulting date after adding working days and/or hours to a given start date",
+				tags: ["Working Days"],
+			},
+			error: ({ error, set }) => {
+				// Manejo de errores personalizados de WorkingDays
+				if (WorkingDaysErrors.isWorkingDaysError(error)) {
+					set.status = error.status;
+					return {
+						error: error.name,
+						message: error.message,
+					};
+				}
+
+				// Manejo de errores por defecto
+				console.error("Unhandled error:", error);
+				set.status = 500;
+				return {
+					error: "InternalServerError",
+					message: "An internal server error occurred",
+				};
+			},
+			response: {
+				200: t.Object({
+					date: t.String({
+						description: "The resulting date in UTC ISO format",
+					}),
+				}),
+				400: t.Object({
+					error: t.String({
+						description: "Error type identifier",
+					}),
+					message: t.String({
+						description: "Human-readable error message",
+					}),
+				}),
+				500: t.Object({
+					error: t.String(),
+					message: t.String(),
+				}),
+			},
+			query: t.Object(
+				{
+					days: t.Optional(
+						t.String({
+							description: "Number of working days to add",
+							examples: ["5", "10"],
+						}),
+					),
+					hours: t.Optional(
+						t.String({
+							description: "Number of working hours to add",
+							examples: ["8", "16"],
+						}),
+					),
+					date: t.Optional(
+						t.String({
+							description: "Start date in ISO 8601 format with Z suffix",
+							examples: ["2023-12-01T10:00:00Z"],
+						}),
+					),
+				},
+				{
+					description: "At least one of 'days' or 'hours' must be provided",
+				},
+			),
+		},
+	);
 
 export default api;

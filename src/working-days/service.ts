@@ -9,8 +9,8 @@ import {
 	setMinutes,
 	setSeconds,
 } from "date-fns";
-import { isHoliday } from "./holidays-service";
-import { WORKING_DAYS, WORKING_HOURS } from "./types";
+import { isHoliday } from "../holidays/service";
+import { WORKING_DAYS, WORKING_HOURS } from "../shared/types";
 
 /**
  * Clase para manejar cálculos de días y horas laborales basada en una fecha específica
@@ -62,7 +62,6 @@ export class WorkingDaysCalculator {
 			(timeInMinutes >= lunchEnd && timeInMinutes < workEnd)
 		);
 	}
-
 
 	public isWorkingTime(date: Date): boolean {
 		return this.isWorkingDay(date) && this.isWorkingHour(date);
