@@ -3,7 +3,7 @@ name: Vercel Production Deployment
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch: # Permite ejecución manual
 
 jobs:
