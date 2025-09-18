@@ -57,7 +57,7 @@ curl "https://working-days-beta.vercel.app/workdays?date=2025-01-15T14:30:00.000
 
 ### Prerrequisitos
 
-- [Bun](https://bun.sh/) >= 1.0
+- [Bun](https://bun.sh/) >= 1.2.20
 
 ### Instalación
 
