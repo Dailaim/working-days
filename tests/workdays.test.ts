@@ -22,7 +22,7 @@ describe("API /workdays", () => {
 		const body = await res.json();
 		expect(body).toHaveProperty("date");
 		expect(body.date).toMatch(/Z$/);
-		expect(body.date).toBe("2025-08-19T14:00:00.000Z");
+		expect(body.date).toBe("2025-08-19T14:00:00Z");
 	});
 
 	it("debe saltar fin de semana si la fecha es sábado → lunes 9:00 a.m.", async () => {
@@ -32,7 +32,7 @@ describe("API /workdays", () => {
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(body.date).toMatch(/Z$/);
-		expect(body.date).toBe("2025-08-19T14:00:00.000Z");
+		expect(body.date).toBe("2025-08-19T14:00:00Z");
 	});
 
 	it("debe sumar 1 día y 4 horas → jueves 9:00 a.m.", async () => {
@@ -42,7 +42,7 @@ describe("API /workdays", () => {
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(body.date).toMatch(/Z$/);
-		expect(body.date).toBe("2025-08-21T15:00:00.000Z");
+		expect(body.date).toBe("2025-08-21T15:00:00Z");
 	});
 
 	it("debe sumar 1 día desde domingo → lunes 5:00 p.m.", async () => {
@@ -52,7 +52,7 @@ describe("API /workdays", () => {
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(body.date).toMatch(/Z$/);
-		expect(body.date).toBe("2025-08-19T22:00:00.000Z");
+		expect(body.date).toBe("2025-08-19T22:00:00Z");
 	});
 
 	it("debe sumar 8 horas desde 8:00 a.m. → mismo día 5:00 p.m.", async () => {
@@ -62,7 +62,7 @@ describe("API /workdays", () => {
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(body.date).toMatch(/Z$/);
-		expect(body.date).toBe("2025-08-20T22:00:00.000Z");
+		expect(body.date).toBe("2025-08-20T22:00:00Z");
 	});
 
 	it("debe sumar 1 día desde 8:00 a.m. → siguiente día laboral 8:00 a.m.", async () => {
@@ -72,7 +72,7 @@ describe("API /workdays", () => {
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(body.date).toMatch(/Z$/);
-		expect(body.date).toBe("2025-08-21T13:00:00.000Z");
+		expect(body.date).toBe("2025-08-21T13:00:00Z");
 	});
 
 	it("debe sumar 1 día desde 12:30 p.m. → siguiente día laboral 12:00 p.m.", async () => {
@@ -82,7 +82,7 @@ describe("API /workdays", () => {
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(body.date).toMatch(/Z$/);
-		expect(body.date).toBe("2025-08-21T17:00:00.000Z");
+		expect(body.date).toBe("2025-08-21T17:00:00Z");
 	});
 
 	it("debe sumar 3 horas desde 11:30 a.m. → mismo día 3:30 p.m.", async () => {
@@ -92,7 +92,7 @@ describe("API /workdays", () => {
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(body.date).toMatch(/Z$/);
-		expect(body.date).toBe("2025-08-20T20:30:00.000Z");
+		expect(body.date).toBe("2025-08-20T20:30:00Z");
 	});
 
 	it("debe manejar festivos correctamente: 5 días + 4 horas desde 10 abril → 21 abril 3:00 p.m.", async () => {
@@ -102,7 +102,7 @@ describe("API /workdays", () => {
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(body.date).toMatch(/Z$/);
-		expect(body.date).toBe("2025-04-21T20:00:00.000Z");
+		expect(body.date).toBe("2025-04-21T20:00:00Z");
 	});
 
 	it("debe devolver error si days es negativo", async () => {
@@ -122,5 +122,28 @@ describe("API /workdays", () => {
 		expect(res.status).toBe(400);
 		const body = await res.json();
 		expect(body.error).toBe("InvalidParameters");
+	});
+
+	it("debe devolver fecha en formato ISO 8601 correcto sin milisegundos", async () => {
+		const testDate = "2025-08-20T13:00:00.000Z"; // Miércoles 8:00 AM Colombia
+		const url = `${BASE_URL}?hours=1&date=${encodeURIComponent(testDate)}`;
+		const res = await api.handle(new Request(url));
+		expect(res.status).toBe(200);
+		const body = await res.json();
+
+		// Verificar que solo tiene la clave "date"
+		expect(Object.keys(body)).toEqual(["date"]);
+
+		// Verificar que termina en Z (no en .000Z)
+		expect(body.date).toMatch(/Z$/);
+		expect(body.date).not.toMatch(/\.\d{3}Z$/);
+
+		// Verificar formato ISO 8601 exacto: YYYY-MM-DDTHH:mm:ssZ
+		expect(body.date).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+
+		// Verificar que es una fecha válida
+		const parsedDate = new Date(body.date);
+		expect(parsedDate.toISOString()).toBeDefined();
+		expect(Number.isNaN(parsedDate.getTime())).toBe(false);
 	});
 });
