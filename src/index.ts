@@ -23,11 +23,6 @@ export const api = new Elysia()
 		({ query }) => {
 			const result = handleWorkdaysRequest(query);
 
-			// Si el resultado tiene una propiedad 'error', es un ErrorResponse
-			if ("error" in result) {
-				throw new WorkingDaysErrors.validationError(result.message);
-			}
-
 			return result;
 		},
 		{
@@ -47,8 +42,6 @@ export const api = new Elysia()
 					};
 				}
 
-				// Manejo de errores por defecto
-				console.error("Unhandled error:", error);
 				set.status = 500;
 				return {
 					error: "InternalServerError",

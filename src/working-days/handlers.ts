@@ -5,11 +5,7 @@ import {
 	isValidIsoDate,
 	parseUtcToColombiaTime,
 } from "../shared/timezone-utils";
-import type {
-	ErrorResponse,
-	SuccessResponse,
-	WorkingDaysParams,
-} from "../shared/types";
+import type { SuccessResponse, WorkingDaysParams } from "../shared/types";
 import { WorkingDaysErrors } from "./errors";
 import { WorkingDaysCalculator } from "./service";
 
@@ -111,7 +107,7 @@ function calculateResultDate(
  */
 export function handleWorkdaysRequest(
 	params: WorkingDaysParams,
-): SuccessResponse | ErrorResponse {
+): SuccessResponse {
 	const { days, hours, startDate } = validateParams(params);
 
 	const calculator = new WorkingDaysCalculator(startDate);
