@@ -15,7 +15,8 @@ export function getCurrentColombiaTime(): Date {
 }
 
 export function formatToUtcIsoString(date: Date): string {
-	return date.toISOString();
+	// Formatear sin milisegundos: remover .000 antes de Z
+	return date.toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
 export function parseUtcToColombiaTime(isoString: string): Date {
